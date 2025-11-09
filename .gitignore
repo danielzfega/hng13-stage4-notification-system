@@ -1,0 +1,32 @@
+# Node & Python
+node_modules/
+__pycache__/
+*.pyc
+.env
+.env.*
+*.log
+
+# Ignore all .env files in subfolders
+**/.env
+
+# Docker
+*.pid
+*.sock
+docker-compose.override.yml
+
+# Python virtual environments
+venv/
+.env/
+.venv/
+
+# IDEs
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Build Artifacts
+dist/
+build/
+*.egg-info/
+coverage/

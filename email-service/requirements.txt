@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+aio_pika
+aiosmtplib
+jinja2
+pydantic
+redis
+httpx
+python-dotenv
