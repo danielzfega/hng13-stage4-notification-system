@@ -1,0 +1,66 @@
+version: "3.8"
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"      # AMQP
+      - "15672:15672"    # RabbitMQ Dashboard
+    networks:
+      - backend
+
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - backend
+
+  template-service:
+    build: ./template-service
+    container_name: template-service
+    ports:
+      - "8001:8001"
+    env_file:
+      - .env
+    environment:
+      - RABBIT_URL=amqp://guest:guest@rabbitmq:5672
+    depends_on:
+      - rabbitmq
+    networks:
+      - backend
+
+  email-service:
+    build: ./email-service
+    container_name: email-service
+    ports:
+      - "8002:8002"
+    env_file:
+      - .env
+    environment:
+      - RABBIT_URL=amqp://guest:guest@rabbitmq:5672
+      - REDIS_URL=redis://redis:6379/0
+      - SMTP_HOST=smtp.mailtrap.io
+      - SMTP_PORT=587
+      - SMTP_USERNAME=${SMTP_USERNAME}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - SMTP_SENDER=no-reply@example.com
+      - TEMPLATE_SERVICE_URL=http://template-service:8001
+      - EMAIL_QUEUE=email.queue
+      - DEAD_LETTER_QUEUE=failed.queue
+      - EXCHANGE=notifications.direct
+      - ROUTING_KEY=email
+      - MAX_RETRIES=5
+      - BASE_BACKOFF_SECONDS=2
+    depends_on:
+      - rabbitmq
+      - redis
+      - template-service
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
