@@ -1,0 +1,14 @@
+node_modules
+npm-debug.log
+dist
+coverage
+.env
+.env.*
+*.log
+.git
+.gitignore
+README.md
+test
+.vscode
+.idea
+firebase-service-account.json
