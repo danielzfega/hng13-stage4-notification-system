@@ -36,8 +36,17 @@ export class QueueConsumer implements OnModuleInit {
             const payload = JSON.parse(msg.content.toString());
             this.logger.log(`Processing notification ${payload.notification_id}`);
 
-            await this.pushService.sendPush(payload);
+            const result = await this.pushService.sendPush(payload);
             channel.ack(msg);
+
+            // Publish status update
+            await this.publishStatus(channel, {
+              notification_id: payload.notification_id,
+              status: 'delivered',
+              timestamp: new Date().toISOString(),
+              sent_count: result.sent_count,
+              failed_count: result.failed_count,
+            });
           } catch (error) {
             this.logger.error(`Error: ${error.message}`);
             
@@ -59,6 +68,14 @@ export class QueueConsumer implements OnModuleInit {
               channel.sendToQueue(failedQueue, msg.content, { persistent: true });
               channel.ack(msg);
               this.logger.error(`Max retries reached for ${payload.notification_id}`);
+
+              // Publish failed status
+              await this.publishStatus(channel, {
+                notification_id: payload.notification_id,
+                status: 'failed',
+                timestamp: new Date().toISOString(),
+                error: error.message,
+              });
             }
           }
         });
@@ -66,5 +83,16 @@ export class QueueConsumer implements OnModuleInit {
         this.logger.log(`Listening on queue: ${queue}`);
       },
     });
+  }
+
+  private async publishStatus(channel: any, statusData: any): Promise<void> {
+    try {
+      const statusQueue = this.config.get('RABBITMQ_STATUS_QUEUE', 'notification.status');
+      await channel.assertQueue(statusQueue, { durable: true });
+      channel.sendToQueue(statusQueue, Buffer.from(JSON.stringify(statusData)), { persistent: true });
+      this.logger.debug(`Status published: ${statusData.notification_id} -> ${statusData.status}`);
+    } catch (error) {
+      this.logger.error(`Failed to publish status: ${error.message}`);
+    }
   }
 }
