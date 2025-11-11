@@ -70,8 +70,9 @@ export class QueueConsumerService implements OnModuleInit {
       this.logger.log('Connected to RabbitMQ');
     });
 
-    this.connection.on('disconnect', (err) => {
-      this.logger.error(`Disconnected from RabbitMQ: ${err?.message}`);
+    this.connection.on('disconnect', (params) => {
+      const err = params?.err;
+      this.logger.error(`Disconnected from RabbitMQ: ${err?.message || 'Unknown error'}`);
     });
 
     this.channelWrapper = this.connection.createChannel({
