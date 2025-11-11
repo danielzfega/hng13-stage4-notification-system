@@ -100,4 +100,28 @@ export class PushService implements OnModuleInit {
       circuit_breaker: this.circuitOpen ? 'OPEN' : 'CLOSED',
     };
   }
+
+  async validateToken(token: string): Promise<boolean> {
+    try {
+      // Dry run to validate token without sending
+      await admin.messaging().send(
+        {
+          token,
+          data: { test: 'validation' },
+        },
+        true, // dryRun = true
+      );
+      this.logger.log(`Token validated successfully`);
+      return true;
+    } catch (error) {
+      this.logger.warn(`Invalid token: ${error.message}`);
+      return false;
+    }
+  }
+
+  updateNotificationStatus(statusData: any): void {
+    this.logger.log(`Status update: ${statusData.notification_id} -> ${statusData.status}`);
+    // In a real implementation, this would publish to a status queue or update a database
+    // For now, we just log it
+  }
 }
