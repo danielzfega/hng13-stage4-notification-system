@@ -1,0 +1,49 @@
+# Node modules and dependencies
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+package-lock.json
+pnpm-lock.yaml
+
+# Logs
+*.log
+logs
+*.out
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Build output
+dist
+build
+
+# Tests and coverage
+coverage
+test-results
+*.lcov
+.nyc_output
+
+# Git and Docker files
+.git
+.gitignore
+Dockerfile
+.dockerignore
+
+# OS / Editor files
+.DS_Store
+Thumbs.db
+.vscode
+.idea
+*.swp
+*.swo
+
+# Temporary / cache
+tmp
+.cache
+.eslintcache
+
+# Other configs
+*.tsbuildinfo

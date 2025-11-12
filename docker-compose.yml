@@ -42,6 +42,10 @@ services:
     networks:
       - backend
 
+# ------------------------
+  # CORE SERVICES
+  # ------------------------
+
   api-gateway-service:
     build: ./api-gateway-service
     container_name: api-gateway-service
@@ -93,7 +97,33 @@ services:
         condition: service_started
     networks:
       - backend
-      
+
+  push-service:
+    build: ./push-service
+    container_name: push-service
+    env_file:
+      - ./push-service/.env
+    depends_on:
+      - redis
+      - rabbitmq
+    ports:
+      - "8003:8003"
+    networks:
+      - backend
+
+  user-service:
+    build: ./user-service
+    container_name: user-service
+    env_file:
+      - ./user-service/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8004:8004"
+    networks:
+      - backend
+
 volumes:
   pgdata:
 
