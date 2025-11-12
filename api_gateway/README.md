@@ -1,36 +1,159 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Stage 4 Backend Task: Microservices & Message Queues
+Task Title: Distributed Notification System
+Goal/Objective:
+Build a notification system that sends emails and push notifications using separate microservices. Each service should communicate asynchronously through a message queue (e.g., RabbitMQ or Kafka).
+Task Execution
+You will be working as a group in teams of 4.
+Airtable link
+You’re required to write the CI/CD workflow for deployment.
+Request/Response/Model naming convention should be snake_case.
+To request for a server for deployment use the command /request-server
+Explainer Video
+TikTok Video
+Services to Build
+## 1. API Gateway Service
+Entry point for all notification requests
+Validates and authenticates requests
+Routes messages to the correct queue (email or push)
+Tracks notification status
+2. User Service
+Manages user contact info (email, push tokens)
+Stores notification preferences
+Handles login and permissions
+Exposes REST APIs for user data
+3. Email Service
+Reads messages from the email queue
+Fills templates with variables (e.g., {{name}})
+Send emails using SMTP or APIs (SendGrid, Mailgun, Gmail)
+Handles delivery confirmations and bounces
+4. Push Service
+Reads messages from the push queue
+Sends mobile or web push notifications
+Validates device tokens
+Supports rich notifications (title, text, image, link)
+Free Push Options: Firebase Cloud Messaging (FCM), OneSignal (Free Plan), Web Push with VAPID (Self-Hosted)
+5. Template Service
+Stores and manages notification templates
+Handles variable substitution
+Supports multiple languages
+Keeps version history for templates
+Message Queue Setup
+ Example (RabbitMQ):
+ Exchange: notifications.direct
+ ├── email.queue  → Email Service
+ ├── push.queue   → Push Service
+ └── failed.queue → Dead Letter Queue
+Response format:
+ {
+  success: boolean
+  data?: T
+  error?: string
+  message: string
+  meta: PaginationMeta
+}
 
-## Getting Started
+interface PaginationMeta {
+  total: number
+  limit: number
+  page: number
+  total_pages: number
+  has_next: boolean
+  has_previous: boolean
+}
+Key Technical Concepts
+Circuit Breaker
+Prevents total system failure when a service (like SMTP or FCM) goes down.
+3. Retry System
+Retry failed messages with exponential backoff and move permanently failed messages to the dead-letter queue.
+4. Service Discovery
+Allows services to find each other dynamically.
+5. Health Checks
+Each service should have a /health endpoint for status monitoring.
+6. Idempotency
+Prevent duplicate notifications by using unique request IDs.
+7. Service Communication
+Synchronous (REST): User preference lookups, Template retrieval, Status queries
+Asynchronous (Message Queue): Notification processing, Retry handling, Status updates
+Data Storage Strategy
+Each service uses its own database:
+User Service: PostgreSQL (user data, preferences)
+Template Service: PostgreSQL (templates, versions)
+Notification Services: Local cache + shared status store
+Shared Tools: Redis for caching user preferences, managing rate limits etc. and RabbitMQ/Kafka for async message queuing
+Failure Handling
+Service Failures: Circuit breaker prevents cascading issues and other services continue running.
+Message Processing Failures: Automatic retries with exponential backoff, permanent failures go to the dead-letter queue.
+Network Issues: Use local cache and continue essential operations gracefully.
+Monitoring & Logs
+Track Metrics: Message rate per queue, Service response times, Error rates, Queue length and lag.
+Logging: Use correlation IDs and log every notification’s lifecycle.
+System Design Diagram
+Each team must submit a simple diagram showing: Service connections, Queue structure, Retry and failure flow, Database relationships, Scaling plan.
+You can use Draw.io, Miro, or Lucidchart (free tools).
+Performance Targets
+Handle 1,000+ notifications per minute
+API Gateway response under 100ms
+99.5% delivery success rate
+All services support horizontal scaling.
+Recommended Tech Stack
+Languages: PHP, Node.js (!express), Python, Go, or Java (Any language of your choice is welcomed)
+Queue: RabbitMQ or Kafka
+Database: PostgreSQL + Redis
+Containerization: Docker
+API Docs: OpenAPI or Swagger
+:white_tick: Sample Request formats
+POST /api/v1/notifications/
+{
+  notification_type: NotificationType,
+  user_id: uuid,
+  template_code: str | path,
+  variables: UserData,
+  request_id: str
+  priority: int
+  metadata: Optional[dict]
+}
 
-First, run the development server:
+class NotificationType(str, Enum):
+    email = "email"
+    push = "push"
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+class UserData:
+    name: str
+    link: HttpUrl
+    meta: Optional[dict]
+POST /api/v1/users/
+{
+  name: str
+  email: Email
+  push_token: Optional[str]  # can be updated with an update endpoint
+  preferences: UserPreference
+  password: str
+}
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+class UserPreference:
+    email: bool
+    push: bool
+POST /api/v1/{notification_preference}/status/
+{
+  notification_id: str
+  status: NotificationStatus
+  timestamp: Optional[datetime]
+  error: Optional[str]
+}
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+class NoticationStatus(str, Enum):
+    delivered = "delivered"
+    pending = "pending"
+    failed = "failed"
+Learning Outcomes
+This stage teaches:
+Microservices decomposition
+Asynchronous messaging patterns
+Distributed system failure handling
+Event-driven architecture design
+Scalable and fault-tolerant notification systems
+Team work and collaboration
+Submission Format
+Use the command /submit in the channel to make submission.
+Prepare to present your work (anyone can be called to answer any question).
+Deadline for submission Wednesday 12th of November, 2025. 11:59pm GMT +1 (WAT)

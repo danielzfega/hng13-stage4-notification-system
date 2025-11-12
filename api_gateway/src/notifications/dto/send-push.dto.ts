@@ -2,16 +2,16 @@ import { IsNotEmpty, IsString, IsObject, IsUUID } from 'class-validator';
 
 export class SendPushDto {
   @IsUUID()
-  request_id: string;
+  request_id!: string;
 
   @IsString()
-  user_id: string;
+  user_id!: string;
 
   @IsString()
-  title: string;
+  title!: string;
 
   @IsString()
-  message: string;
+  message!: string;
 
   @IsObject()
   data?: Record<string, any>;

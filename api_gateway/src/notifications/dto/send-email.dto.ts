@@ -2,17 +2,17 @@ import { IsEmail, IsNotEmpty, IsString, IsObject, IsUUID } from 'class-validator
 
 export class SendEmailDto {
   @IsUUID()
-  request_id: string;
+  request_id!: string;
 
   @IsEmail()
-  to: string;
+  to!: string;
 
   @IsString()
-  subject: string;
+  subject!: string;
 
   @IsString()
-  template_name: string;
+  template_name!: string;
 
   @IsObject()
-  variables: Record<string, any>;
+  variables!: Record<string, any>;
 }
