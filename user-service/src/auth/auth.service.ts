@@ -49,7 +49,7 @@ export class AuthService {
     const tokenPayload = { sub: user.id, email: user.email };
     const accessToken = this.jwtService.sign(tokenPayload, {
       secret: this.configService.getOrThrow('JWT_SECRET'),
-      expiresIn: this.configService.getOrThrow('JWT_EXPIRATION'),
+      expiresIn: Number(this.configService.getOrThrow('JWT_EXPIRATION')),
     });
     return {
       accessToken,
