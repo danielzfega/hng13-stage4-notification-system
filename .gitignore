@@ -30,3 +30,7 @@ dist/
 build/
 *.egg-info/
 coverage/
+
+# Firebase Service Account (Sensitive)
+firebase-service-account.json
+**/firebase-service-account.json
