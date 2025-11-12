@@ -1,6 +1,7 @@
 version: "3.8"
 
 services:
+
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
@@ -11,7 +12,7 @@ services:
       test: ["CMD", "rabbitmq-diagnostics", "ping"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
     networks:
       - backend
 
@@ -26,19 +27,18 @@ services:
   postgres:
     image: postgres:15
     container_name: postgres
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgrefega
-      POSTGRES_DB: notification_system_templates
+    env_file:
+      ./.env
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./postgres-init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - backend
 
@@ -79,6 +79,7 @@ services:
     networks:
       - backend
 
+
   email-service:
     build: ./email-service
     container_name: email-service
@@ -100,6 +101,10 @@ services:
 
   push-service:
     build: ./push-service
+    volumes:
+      - ./push-service/firebase-service-account.json:/app/firebase-service-account.json:ro
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/firebase-service-account.json
     container_name: push-service
     env_file:
       - ./push-service/.env

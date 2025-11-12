@@ -1,3 +1,4 @@
+// src/notification/notification.service.ts
 import { Injectable } from '@nestjs/common';
 import * as amqp from 'amqplib';
 
@@ -19,7 +20,7 @@ export class NotificationService {
     await channel.publish(
       this.exchange,
       routingKey,
-      Buffer.from(JSON.stringify(payload))
+      Buffer.from(JSON.stringify(payload)),
     );
 
     await channel.close();
