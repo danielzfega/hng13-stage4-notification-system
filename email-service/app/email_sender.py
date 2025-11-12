@@ -2,7 +2,7 @@ import os
 from email.message import EmailMessage
 import aiosmtplib
 import httpx
-from .circuit_breaker import CircuitBreaker
+from app.circuit_breaker import CircuitBreaker
 
 SMTP_HOST = os.getenv("SMTP_HOST", "smtp.mailtrap.io")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))

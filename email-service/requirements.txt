@@ -3,6 +3,8 @@ uvicorn[standard]
 aio_pika
 aiosmtplib
 jinja2
+aioredis
+setuptools>=68.0.0
 pydantic
 redis
 httpx

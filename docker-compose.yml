@@ -18,6 +18,20 @@ services:
     networks:
       - backend
 
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    env_file:
+      - ./template-service/.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - backend
+
+
+
   template-service:
     build: ./template-service
     container_name: template-service
@@ -60,6 +74,9 @@ services:
       - template-service
     networks:
       - backend
+
+volumes:
+  pgdata:
 
 networks:
   backend:
