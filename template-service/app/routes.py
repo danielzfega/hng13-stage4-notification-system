@@ -1,14 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from .database import get_session
-from .crud import (
+from app.crud import (
     create_template_version, get_template_version, list_templates, get_template_by_code
 )
-from .schemas import (
+from app.schemas import (
     TemplateVersionCreate, TemplateVersionOut, RenderRequest,
     RenderResponse, ListResponse, PaginationMeta, TemplateOut
 )
-from .utils import render_subject_and_body
+from app.utils import render_subject_and_body
 
 router = APIRouter(prefix="/api/v1/templates", tags=["templates"])
 

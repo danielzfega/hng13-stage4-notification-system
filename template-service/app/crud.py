@@ -1,7 +1,7 @@
 from sqlmodel import select, Session
 from typing import Optional, Tuple, List
-from .models import Template, TemplateVersion
-from .schemas import TemplateVersionCreate
+from app.models import Template, TemplateVersion
+from app.schemas import TemplateVersionCreate
 
 def get_template_by_code(session: Session, code: str) -> Optional[Template]:
     stmt = select(Template).where(Template.code == code)
