@@ -4,8 +4,9 @@ import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
-import { APP_PIPE } from '@nestjs/core';
+import { APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
+import { ResponseInterceptor } from './core/response.interceptor';
 
 @Module({
   imports: [
@@ -20,6 +21,10 @@ import { ConfigModule } from '@nestjs/config';
     {
       provide: APP_PIPE,
       useValue: new ValidationPipe({ transform: true }),
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ResponseInterceptor,
     },
   ],
 })
