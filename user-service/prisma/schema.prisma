@@ -28,8 +28,8 @@ model User{
 
 model UserPreferences {
   id   String @id @default(uuid())
- user_id String @unique
- email_notifications Boolean @default(true)
+  user_id String @unique
+  email_notifications Boolean @default(true)
   push_notifications Boolean @default(true)
 
   user User @relation(fields: [user_id], references: [id])
