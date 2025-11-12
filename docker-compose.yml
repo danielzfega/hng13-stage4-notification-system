@@ -7,6 +7,11 @@ services:
     ports:
       - "5672:5672"      # AMQP
       - "15672:15672"    # RabbitMQ Dashboard
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - backend
 
@@ -21,16 +26,21 @@ services:
   postgres:
     image: postgres:15
     container_name: postgres
-    env_file:
-      - ./template-service/.env
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrefega
+      POSTGRES_DB: notification_system_templates
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
       - backend
-
-
 
   template-service:
     build: ./template-service
@@ -42,7 +52,10 @@ services:
     environment:
       - RABBIT_URL=amqp://guest:guest@rabbitmq:5672
     depends_on:
-      - rabbitmq
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     networks:
       - backend
 
@@ -53,28 +66,18 @@ services:
       - "8002:8002"
     env_file:
       - ./email-service/.env
-    environment:
-      - RABBIT_URL=amqp://guest:guest@rabbitmq:5672
-      - REDIS_URL=redis://redis:6379/0
-      - SMTP_HOST=smtp.mailtrap.io
-      - SMTP_PORT=587
-      - SMTP_USERNAME=${SMTP_USERNAME}
-      - SMTP_PASSWORD=${SMTP_PASSWORD}
-      - SMTP_SENDER=no-reply@example.com
-      - TEMPLATE_SERVICE_URL=http://template-service:8001
-      - EMAIL_QUEUE=email.queue
-      - DEAD_LETTER_QUEUE=failed.queue
-      - EXCHANGE=notifications.direct
-      - ROUTING_KEY=email
-      - MAX_RETRIES=5
-      - BASE_BACKOFF_SECONDS=2
     depends_on:
-      - rabbitmq
-      - redis
-      - template-service
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      template-service:
+        condition: service_started
     networks:
       - backend
-
+      
 volumes:
   pgdata:
 
