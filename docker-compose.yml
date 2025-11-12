@@ -1,12 +1,18 @@
 version: "3.8"
 
 services:
+
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
     ports:
       - "5672:5672"      # AMQP
       - "15672:15672"    # RabbitMQ Dashboard
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
       - backend
 
@@ -15,6 +21,44 @@ services:
     container_name: redis
     ports:
       - "6379:6379"
+    networks:
+      - backend
+
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    env_file:
+      ./.env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres-init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - backend
+
+# ------------------------
+  # CORE SERVICES
+  # ------------------------
+
+  api-gateway-service:
+    build: ./api-gateway-service
+    container_name: api-gateway-service
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./api-gateway-service/.env
+    depends_on:
+      - rabbitmq
+      - redis
+      - postgres
+      - template-service
+      - email-service
     networks:
       - backend
 
@@ -28,9 +72,13 @@ services:
     environment:
       - RABBIT_URL=amqp://guest:guest@rabbitmq:5672
     depends_on:
-      - rabbitmq
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     networks:
       - backend
+
 
   email-service:
     build: ./email-service
@@ -39,27 +87,50 @@ services:
       - "8002:8002"
     env_file:
       - ./email-service/.env
-    environment:
-      - RABBIT_URL=amqp://guest:guest@rabbitmq:5672
-      - REDIS_URL=redis://redis:6379/0
-      - SMTP_HOST=smtp.mailtrap.io
-      - SMTP_PORT=587
-      - SMTP_USERNAME=${SMTP_USERNAME}
-      - SMTP_PASSWORD=${SMTP_PASSWORD}
-      - SMTP_SENDER=no-reply@example.com
-      - TEMPLATE_SERVICE_URL=http://template-service:8001
-      - EMAIL_QUEUE=email.queue
-      - DEAD_LETTER_QUEUE=failed.queue
-      - EXCHANGE=notifications.direct
-      - ROUTING_KEY=email
-      - MAX_RETRIES=5
-      - BASE_BACKOFF_SECONDS=2
     depends_on:
-      - rabbitmq
-      - redis
-      - template-service
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      template-service:
+        condition: service_started
     networks:
       - backend
+
+  push-service:
+    build: ./push-service
+    volumes:
+      - ./push-service/firebase-service-account.json:/app/firebase-service-account.json:ro
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/firebase-service-account.json
+    container_name: push-service
+    env_file:
+      - ./push-service/.env
+    depends_on:
+      - redis
+      - rabbitmq
+    ports:
+      - "8003:8003"
+    networks:
+      - backend
+
+  user-service:
+    build: ./user-service
+    container_name: user-service
+    env_file:
+      - ./user-service/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8004:8004"
+    networks:
+      - backend
+
+volumes:
+  pgdata:
 
 networks:
   backend:

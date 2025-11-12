@@ -3,9 +3,9 @@ import asyncio
 import json
 import aio_pika
 from aio_pika import Message, DeliveryMode, ExchangeType
-from .email_sender import send_email
-from .idempotency import create_redis_pool, Idempotency
-from .schemas import EmailMessagePayload
+from app.email_sender import send_email
+from app.idempotency import create_redis_pool, Idempotency
+from app.schemas import EmailMessagePayload
 from typing import Any
 
 RABBIT_URL = os.getenv("RABBIT_URL", "amqp://guest:guest@rabbitmq:5672")

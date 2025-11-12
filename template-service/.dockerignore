@@ -1,0 +1,76 @@
+# Python cache / build files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pdb
+*.pyproj
+*.egg-info/
+.eggs/
+*.egg
+
+# Byte-compiled and optimized files
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+
+# Distribution / packaging
+build/
+dist/
+*.spec
+
+# Virtual environment
+venv/
+.env/
+.env*/        # any env variants
+.venv/
+ENV/
+env/
+
+# Logs
+*.log
+logs/
+*.out
+
+# Local configuration
+config.yaml
+config.json
+*.ini
+
+# IDE / editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Git & Docker
+.git/
+.gitignore
+.dockerignore
+Dockerfile
+
+# Test and coverage
+.coverage
+htmlcov/
+.tox/
+.pytest_cache/
+tests/__pycache__/
+tests/.pytest_cache/
+
+# Notebooks
+*.ipynb_checkpoints
+
+# Optional: if using Poetry
+poetry.lock
+
+# Optional: if using Pipenv
+Pipfile.lock
+
+# Optional: static / media files (if mounted separately)
+media/
+staticfiles/

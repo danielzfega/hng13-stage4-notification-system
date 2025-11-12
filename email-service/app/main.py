@@ -2,8 +2,8 @@ import asyncio
 import os
 from fastapi import FastAPI, HTTPException
 from app.consumer import consume
-from .idempotency import create_redis_pool
-from .idempotency import Idempotency
+from app.idempotency import create_redis_pool
+from app.idempotency import Idempotency
 from pydantic import BaseModel
 import aio_pika
 import json
