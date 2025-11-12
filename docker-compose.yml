@@ -42,6 +42,22 @@ services:
     networks:
       - backend
 
+  api-gateway-service:
+    build: ./api-gateway-service
+    container_name: api-gateway-service
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./api-gateway-service/.env
+    depends_on:
+      - rabbitmq
+      - redis
+      - postgres
+      - template-service
+      - email-service
+    networks:
+      - backend
+
   template-service:
     build: ./template-service
     container_name: template-service
