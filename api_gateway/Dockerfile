@@ -1,33 +1,21 @@
-# Stage 1: Build
-FROM node:20-alpine AS builder
+# Stage 1: Build & dev environment
+FROM node:20-alpine
 
 # Set working directory
 WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json
-COPY package*.json ./
-
 # Install dependencies
+COPY package*.json ./
 RUN npm install
+
+# Install global dev tools (Nest CLI, TS node)
+RUN npm install -g @nestjs/cli typescript ts-node
 
 # Copy source code
 COPY . .
 
-# Build the app
-RUN npm run build
-
-# Stage 2: Run
-FROM node:20-alpine
-
-WORKDIR /usr/src/app
-
-# Copy only built files and node_modules
-COPY --from=builder /usr/src/app/dist ./dist
-COPY --from=builder /usr/src/app/node_modules ./node_modules
-COPY package*.json ./
-
-# Expose the port your NestJS app runs on
+# Expose port
 EXPOSE 3000
 
-# Start the app
-CMD ["node", "dist/main.js"]
+# Start NestJS in watch mode for hot reload
+CMD ["npm", "run", "start:dev"]
