@@ -1,5 +1,6 @@
 import asyncio
 import os
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from app.consumer import consume
 from app.idempotency import create_redis_pool
@@ -8,27 +9,34 @@ from pydantic import BaseModel
 import aio_pika
 import json
 
-app = FastAPI(title="Email Service")
-
 consumer_task = None
 
-@app.on_event("startup")
-async def startup_event():
-    # Start background consumer
-    global consumer_task
-    consumer_task = asyncio.create_task(consume())
-    print("Started RabbitMQ consumer task")
 
-@app.on_event("shutdown")
-async def shutdown_event():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
     global consumer_task
+    import sys
+    print("🚀 Starting RabbitMQ consumer task...", file=sys.stderr, flush=True)
+    consumer_task = asyncio.create_task(consume())
+    print("✅ RabbitMQ consumer task created", file=sys.stderr, flush=True)
+    yield
+    # Shutdown
     if consumer_task:
         consumer_task.cancel()
-        await asyncio.sleep(0.1)
+        try:
+            await consumer_task
+        except asyncio.CancelledError:
+            pass
+
+
+app = FastAPI(title="Email Service", lifespan=lifespan)
+
 
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
 
 class SendRequest(BaseModel):
     request_id: str
@@ -37,6 +45,7 @@ class SendRequest(BaseModel):
     body: str | None = None
     template_name: str | None = None
     variables: dict | None = None
+
 
 @app.post("/send", status_code=202)
 async def send_manual(req: SendRequest):
