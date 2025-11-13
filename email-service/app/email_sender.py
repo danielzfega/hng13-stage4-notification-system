@@ -10,7 +10,8 @@ SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
 SMTP_USERNAME = os.getenv("SMTP_USERNAME", "")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
 SMTP_SENDER = os.getenv("SMTP_SENDER", SMTP_USERNAME or "no-reply@example.com")
-TEMPLATE_SERVICE_URL = os.getenv("TEMPLATE_SERVICE_URL", "http://template-service:8001")
+TEMPLATE_SERVICE_URL = os.getenv(
+    "TEMPLATE_SERVICE_URL", "http://template-service:8001")
 
 cb = CircuitBreaker(fail_threshold=5, reset_timeout=30)
 
@@ -22,7 +23,8 @@ async def _send_smtp(to: str, subject: str, body: str):
     Sends email via Gmail SMTP using aiosmtplib with STARTTLS
     """
     if not SMTP_USERNAME or not SMTP_PASSWORD:
-        raise ValueError("SMTP credentials are missing. Please set SMTP_USERNAME and SMTP_PASSWORD in environment.")
+        raise ValueError(
+            "SMTP credentials are missing. Please set SMTP_USERNAME and SMTP_PASSWORD in environment.")
 
     message = EmailMessage()
     message["From"] = SMTP_SENDER
@@ -51,8 +53,8 @@ async def render_template(template_name: str, variables: dict):
     """
     async with httpx.AsyncClient(timeout=15.0) as client:
         resp = await client.post(
-            f"{TEMPLATE_SERVICE_URL}/templates/render",
-            json={"template_name": template_name, "variables": variables},
+            f"{TEMPLATE_SERVICE_URL}/api/v1/templates/render",
+            json={"template_code": template_name, "variables": variables},
         )
         resp.raise_for_status()
         return resp.json()  # Expected {"subject": "...", "body": "..."}
@@ -73,6 +75,7 @@ async def send_email(payload: dict):
         rendered = await render_template(payload["template_name"], payload.get("variables") or {})
         subject, body = rendered["subject"], rendered["body"]
     else:
-        raise ValueError("Invalid payload. Provide subject/body or template_name + variables.")
+        raise ValueError(
+            "Invalid payload. Provide subject/body or template_name + variables.")
 
     return await _send_smtp(payload["to"], subject, body)

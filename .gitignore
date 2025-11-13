@@ -34,3 +34,6 @@ coverage/
 # Firebase Service Account (Sensitive)
 firebase-service-account.json
 **/firebase-service-account.json
+
+# Allow example environment files to be committed
+!.env.example

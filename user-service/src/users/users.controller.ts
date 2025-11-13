@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-users.dto';
 import { JwtAuthGuard } from 'src/auth/guard/jwt.guard';
@@ -12,7 +12,30 @@ export class UsersController {
   @Get()
   @UseGuards(JwtAuthGuard)
   async getusers() {
-    return this.userService.findAllUsers();
+    const users = await this.userService.findAllUsers();
+    return {
+      success: true,
+      message: 'Users retrieved successfully',
+      data: users,
+      meta: {
+        total: users.length,
+        limit: users.length,
+        page: 1,
+        total_pages: 1,
+        has_next: false,
+        has_previous: false,
+      },
+    };
+  }
+
+  @Get(':id')
+  async getUserById(@Param('id') id: string) {
+    const user = await this.userService.findUserById(id);
+    return {
+      success: true,
+      message: 'User retrieved successfully',
+      data: user,
+    };
   }
 
   @Patch()
@@ -21,6 +44,11 @@ export class UsersController {
     @Body() updateUserDto: UpdateUserDto,
     @CurrentUser() user: User,
   ) {
-    return await this.userService.updateUser(user.id, updateUserDto);
+    const updatedUser = await this.userService.updateUser(user.id, updateUserDto);
+    return {
+      success: true,
+      message: 'User updated successfully',
+      data: updatedUser,
+    };
   }
 }

@@ -7,11 +7,19 @@ export class HealthController {
 
   @Get('/health')
   getHealth() {
-    return {
-      success: true,
-      message: 'Push service is healthy',
-      data: this.pushService.getHealth(),
-    };
+    try {
+      return {
+        success: true,
+        message: 'Push service is healthy',
+        data: this.pushService.getHealth(),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Push service is degraded',
+        error: error.message,
+      };
+    }
   }
 
   @Post('/api/v1/push/validate-token')
@@ -39,4 +47,3 @@ export class HealthController {
     };
   }
 }
-
