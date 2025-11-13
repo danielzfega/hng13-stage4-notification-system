@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
 import { NotificationModule } from './notification/notification.module';
 import { PrismaService } from './prisma/prisma.service';
+import { HealthController } from './health.controller';
 
 @Module({
   imports: [
@@ -11,6 +12,7 @@ import { PrismaService } from './prisma/prisma.service';
     HttpModule,
     NotificationModule,
   ],
+  controllers: [HealthController],
   providers: [PrismaService],
 })
 export class AppModule {}
