@@ -242,6 +242,18 @@ USER_RESPONSE=$(curl -s -X POST http://localhost:8004/auth/signup \
     }
   }')
 
+curl -X POST http://localhost:8001/api/v1/templates/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "template_code": "welcome_email",
+    "template_type": "email",
+    "language": "en",
+    "subject": "Welcome {{ name }}",
+    "body": "<p>Hi {{ name }}, welcome to my email notification list</p>",
+    "changelog": "initial version"
+  }'
+
+
 USER_ID=$(echo $USER_RESPONSE | jq -r '.data.user.id // .user.id')
 
 if [ -z "$USER_ID" ] || [ "$USER_ID" == "null" ]; then
@@ -260,7 +272,7 @@ else
         "notification_type": "email",
         "template_code": "welcome_email",
         "variables": {
-          "name": "EC2 Test User",
+          "name": "'$USER_ID'",
           "link": "https://example.com/welcome"
         }
       }')
