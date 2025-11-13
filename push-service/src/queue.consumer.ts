@@ -25,19 +25,51 @@ export class QueueConsumer implements OnModuleInit {
 
     this.channel = this.connection.createChannel({
       setup: async (channel) => {
+        this.logger.log('Setting up channel...');
+        const exchange = this.config.get('RABBITMQ_EXCHANGE', 'notifications.direct');
+        const routingKey = this.config.get('RABBITMQ_ROUTING_KEY', 'push');
+        
+        // Assert exchange
+        await channel.assertExchange(exchange, 'direct', { durable: true });
+        
+        // Assert queues
         await channel.assertQueue(queue, { durable: true });
         await channel.assertQueue(failedQueue, { durable: true });
+        
+        // Bind queue to exchange with routing key
+        await channel.bindQueue(queue, exchange, routingKey);
+        this.logger.log(`Queue '${queue}' bound to exchange '${exchange}' with routing key '${routingKey}'`);
+        
         await channel.prefetch(10);
+        this.logger.log('Queues asserted, setting up consumer...');
 
         await channel.consume(queue, async (msg) => {
-          if (!msg) return;
+          this.logger.log(`📨 Consumer callback triggered!`);
+          if (!msg) {
+            this.logger.warn('Received null message');
+            return;
+          }
 
           try {
+            this.logger.log(`📨 Received message from queue`);
             const payload = JSON.parse(msg.content.toString());
-            this.logger.log(`Processing notification ${payload.notification_id}`);
+            this.logger.log(`📦 Payload: ${JSON.stringify(payload)}`);
+            this.logger.log(`🔔 Processing notification ${payload.notification_id}`);
 
-            const result = await this.pushService.sendPush(payload);
+            // Transform payload to match sendPush expectations
+            const pushPayload = {
+              notification_id: payload.notification_id,
+              device_tokens: payload.push_token ? [payload.push_token] : (payload.device_tokens || []),
+              title: payload.title || payload.template_name || 'Notification',
+              body: payload.body || JSON.stringify(payload.variables),
+              data: payload.variables || {},
+              priority: payload.priority || 'high',
+              image_url: payload.image_url,
+            };
+
+            const result = await this.pushService.sendPush(pushPayload);
             channel.ack(msg);
+            this.logger.log(`✅ Message acknowledged`);
 
             // Publish status update
             await this.publishStatus(channel, {
