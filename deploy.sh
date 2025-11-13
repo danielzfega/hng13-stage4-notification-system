@@ -219,7 +219,7 @@ wait_for_service() {
 wait_for_service "API Gateway" "http://localhost:8000/api/v1/health"
 wait_for_service "User Service" "http://localhost:8004/health"
 wait_for_service "Email Service" "http://localhost:8002/health"
-wait_for_service "Template Service" "http://localhost:8001/api/v1/health"
+wait_for_service "Template Service" "http://localhost:8001/health"
 wait_for_service "Push Service" "http://localhost:8003/health"
 
 ################################################################################
