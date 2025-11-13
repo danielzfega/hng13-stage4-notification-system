@@ -19,20 +19,34 @@ export class AuthService {
   }
 
   async signup(body: SignupDto) {
-    const { email, password } = body;
+    const { email, password, name, push_token, preferences } = body;
 
     const existingUser = await this.userService.findUserByEmail(email);
     if (existingUser) {
       throw new BadRequestException('User with email already exists');
     }
     const hashedPassword = await this.hashpassword(password);
-    await this.userService.createUser({
+    const user = await this.userService.createUser({
       email,
+      name,
       password: hashedPassword,
+      push_token,
+      preferences: {
+        create: {
+          email_notifications: preferences.email,
+          push_notifications: preferences.push,
+        },
+      },
     });
     return {
-      sucess: true,
+      success: true,
       message: 'User created successfully',
+      data: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        push_token: user.push_token,
+      },
     };
   }
 
@@ -49,10 +63,19 @@ export class AuthService {
     const tokenPayload = { sub: user.id, email: user.email };
     const accessToken = this.jwtService.sign(tokenPayload, {
       secret: this.configService.getOrThrow('JWT_SECRET'),
-      expiresIn: Number(this.configService.getOrThrow('JWT_EXPIRATION')),
+      expiresIn: this.configService.getOrThrow('JWT_EXPIRATION'),
     });
     return {
-      accessToken,
+      success: true,
+      message: 'Login successful',
+      data: {
+        access_token: accessToken,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        },
+      },
     };
   }
 }
