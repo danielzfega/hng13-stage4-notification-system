@@ -7,3 +7,17 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model NotificationStatus {
+  id         String   @id @default(uuid())
+  request_id String   @unique
+  status     String   // pending, delivered, failed
+  type       String   // email, push
+  user_id    String
+  error      String?
+  metadata   Json?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("notification_status")
+}
