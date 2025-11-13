@@ -50,9 +50,10 @@ export class NotificationService {
         // Create notification record
     const notification = await this.createNotificationRecord(payload);
 
-    // Fetch user email for email notifications by calling user service
+    // Fetch user data for email and push notifications by calling user service
     let userEmail = null;
-    if (payload.notification_type === 'email') {
+    let pushToken = null;
+    if (payload.notification_type === 'email' || payload.notification_type === 'push') {
       try {
         const userServiceUrl = process.env.USER_SERVICE_URL || 'http://user-service:8004';
         const response = await fetch(`${userServiceUrl}/users/${payload.user_id}`);
@@ -62,12 +63,13 @@ export class NotificationService {
         const userData = await response.json();
         const user = userData.data || userData;
         userEmail = user.email;
+        pushToken = user.push_token;
         // Add user name to variables if not present
         if (!payload.variables.name && user.name) {
           payload.variables.name = user.name;
         }
       } catch (error) {
-        this.logger.error(`Failed to fetch user email: ${error.message}`);
+        this.logger.error(`Failed to fetch user data: ${error.message}`);
         throw error;
       }
     }
@@ -92,8 +94,13 @@ export class NotificationService {
     };
 
     // Add email for email notifications
-    if (userEmail) {
+    if (userEmail && payload.notification_type === 'email') {
       message.to = userEmail;
+    }
+
+    // Add push_token for push notifications
+    if (pushToken && payload.notification_type === 'push') {
+      message.push_token = pushToken;
     }
 
     await channel.publish(
