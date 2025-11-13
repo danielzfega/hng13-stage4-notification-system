@@ -1,0 +1,23 @@
+app = "api-gateway-service"
+primary_region = "fra"         # choose region
+
+[build]
+  dockerfile = "Dockerfile"
+
+[[services]]
+  internal_port = 8000
+  protocol = "tcp"
+
+  [[services.ports]]
+    handlers = ["http"]
+    port = 80
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 443
+
+[env]
+  DATABASE_URL = "postgresql://…"
+  RABBITMQ_URL = "amqp://…"
+  API_PORT = "8000"
+  # add more env vars as needed

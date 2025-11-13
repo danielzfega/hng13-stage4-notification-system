@@ -107,10 +107,10 @@ docker-compose up -d
 
 3. **Check service status:**
 ```bash
-curl http://localhost:3000/health      # API Gateway
-curl http://localhost:3001/health      # User Service
+curl http://localhost:8000/health      # API Gateway
+curl http://localhost:8004/health      # User Service
 curl http://localhost:8002/health      # Email Service
-curl http://localhost:3003/health      # Push Service
+curl http://localhost:8003/health      # Push Service
 curl http://localhost:8001/health      # Template Service
 ```
 
@@ -118,7 +118,7 @@ curl http://localhost:8001/health      # Template Service
 
 ### Send Email Notification
 ```bash
-curl -X POST http://localhost:3000/api/v1/notifications/ \
+curl -X POST http://localhost:8000/api/v1/notifications/ \
   -H "Content-Type: application/json" \
   -d '{
     "notification_type": "email",
@@ -135,7 +135,7 @@ curl -X POST http://localhost:3000/api/v1/notifications/ \
 
 ### Send Push Notification
 ```bash
-curl -X POST http://localhost:3000/api/v1/notifications/ \
+curl -X POST http://localhost:8000/api/v1/notifications/ \
   -H "Content-Type: application/json" \
   -d '{
     "notification_type": "push",
