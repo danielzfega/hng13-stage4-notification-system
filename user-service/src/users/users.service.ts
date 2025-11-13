@@ -15,8 +15,39 @@ export class UsersService {
     return this.prisma.user.findUnique({ where: { email } });
   }
 
+  async findUserById(id: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        push_token: true,
+        created_at: true,
+        updated_at: true,
+        preferences: true,
+      },
+    });
+    
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    
+    return user;
+  }
+
   findAllUsers() {
-    return this.prisma.user.findMany({ include: { preferences: true } });
+    return this.prisma.user.findMany({ 
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        push_token: true,
+        created_at: true,
+        updated_at: true,
+        preferences: true,
+      },
+    });
   }
 
   async updateUser(id: string, body: UpdateUserDto) {
@@ -24,9 +55,39 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException('User does not exist');
     }
+
+    const updateData: any = {};
+    
+    if (body.name !== undefined) updateData.name = body.name;
+    if (body.push_token !== undefined) updateData.push_token = body.push_token;
+
+    if (body.preferences) {
+      updateData.preferences = {
+        upsert: {
+          create: {
+            email_notifications: body.preferences.email ?? true,
+            push_notifications: body.preferences.push ?? true,
+          },
+          update: {
+            ...(body.preferences.email !== undefined && { email_notifications: body.preferences.email }),
+            ...(body.preferences.push !== undefined && { push_notifications: body.preferences.push }),
+          },
+        },
+      };
+    }
+
     return await this.prisma.user.update({
       where: { id },
-      data: body,
+      data: updateData,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        push_token: true,
+        created_at: true,
+        updated_at: true,
+        preferences: true,
+      },
     });
   }
 }
