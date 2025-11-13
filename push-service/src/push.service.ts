@@ -25,19 +25,33 @@ export class PushService implements OnModuleInit {
         this.logger.log('Firebase initialized');
       }
     } else {
-      this.logger.error('Firebase service account not found');
+      this.logger.warn('Firebase service account not found - push notifications will not work');
     }
 
-    // Initialize Redis
+    // Initialize Redis with proper host from environment
+    const redisHost = this.config.get('REDIS_HOST') || process.env.REDIS_HOST || 'redis';
+    const redisPort = parseInt(this.config.get('REDIS_PORT') || process.env.REDIS_PORT || '6379');
+    
+    this.logger.log(`Connecting to Redis at ${redisHost}:${redisPort}`);
+    
     this.redis = createClient({
       socket: {
-        host: this.config.get('REDIS_HOST', 'localhost'),
-        port: this.config.get('REDIS_PORT', 6379),
+        host: redisHost,
+        port: redisPort,
       },
     });
     
-    await this.redis.connect();
-    this.logger.log('Redis connected');
+    this.redis.on('error', (err) => {
+      this.logger.error(`Redis error: ${err.message}`);
+    });
+    
+    try {
+      await this.redis.connect();
+      this.logger.log('Redis connected successfully');
+    } catch (error) {
+      this.logger.error(`Failed to connect to Redis: ${error.message}`);
+      throw error;
+    }
   }
 
   async sendPush(payload: any): Promise<any> {
