@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { NotificationType } from './notification.enums';
-import { UserDataDto } from './user-data.dto';
+import { NotificationType } from './notifications.enums';
+import { UserDataDto } from './user_data.dto';
 
 export class SendNotificationDto {
   @ApiProperty({ enum: NotificationType, example: NotificationType.EMAIL })

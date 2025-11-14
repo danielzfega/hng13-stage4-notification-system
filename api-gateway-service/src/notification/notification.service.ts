@@ -1,7 +1,7 @@
 // src/notification/notification.service.ts
 import { Injectable } from '@nestjs/common';
 import * as amqp from 'amqplib';
-
+import { NotificationType } from './dto/notifications.enums';
 @Injectable()
 export class NotificationService {
   private readonly exchange = 'notifications.direct';
@@ -15,7 +15,7 @@ export class NotificationService {
     const channel = await connection.createChannel();
 
     await channel.assertExchange(this.exchange, 'direct', { durable: true });
-    const routingKey = payload.notification_type;
+    const routingKey = payload.NotificationType;
 
     await channel.publish(
       this.exchange,
